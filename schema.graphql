@@ -1,0 +1,40 @@
+type Story {
+  id: Int!
+  by: String
+  descendants: Int
+  kids: [Int]
+  score: Int
+  time: Int
+  title: String
+  type: String
+  url: String
+}
+
+type RefreshResult {
+  success: Boolean
+  message: String
+}
+
+type HighlightedStory {
+  id: Int!
+  by: String
+  descendants: Int
+  kids: [Int]
+  score: Int
+  time: Int
+  title: String
+  type: String
+  url: String
+  metaDescription: String
+}
+
+type Query {
+  recent: [Story]
+  popular: [Story]
+  highlight: HighlightedStory
+}
+
+type Mutation {
+  refresh: RefreshResult
+}
+
