@@ -5,13 +5,31 @@ import fetch from "node-fetch"
 
 const LIMIT = 10
 // 5 minutes ⬇️
-export const INTERVAL_MS = 5 * 60 * 1000
+export const INTERVAL_MS = 5 * 60 * 10
 
 const getMostRecentStories = async () => {
   try {
     const { data: topStoryIds } = await baseStoryUrl.get(
       "/topstories.json?print=pretty"
     )
+    /*
+    Disadvantage of Promise.all is that if one fails, the array does not return.
+    ALTERNATIVE: allSettled
+    const topStoriesPromises = topStoryIds.map(async (id: number) => {
+    try {
+      const { data: storyResponse } = await baseStoryUrl.get(
+        `/item/${id}.json?print=pretty`
+      );
+      return { status: 'fulfilled', value: storyResponse };
+    } catch (error) {
+      return { status: 'rejected', reason: error };
+    }
+  });
+
+  const results = await Promise.allSettled(topStoriesPromises);
+  const successfulResults = results.filter(result => result.status === 'fulfilled');
+  const topStories = successfulResults.map(result => result.value);
+    */
     const topStoriesPromises = topStoryIds.map(async (id: number) => {
       const { data: storyResponse } = await baseStoryUrl.get(
         `/item/${id}.json?print=pretty`
@@ -84,7 +102,7 @@ const renderStories = async (isRefresh?: boolean) => {
 }
 
 const start = async (interval = INTERVAL_MS) => {
-  renderStories()
+  await renderStories()
   setInterval(() => {
     renderStories()
   }, interval)

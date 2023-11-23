@@ -1,6 +1,11 @@
 import { HighlightedStory, RefreshResult, Story } from "./types"
 import { storyApi } from "./api"
 
+/* 
+NOTE: First all the api logic was here but later I had to refactor them into separate functions
+because the refresh endpoint called the rest of the endpoints and it's not best practice to call resolvers inside resolvers
+*/
+
 const resolvers = {
   Query: {
     recent: async (): Promise<Story[]> => await storyApi.getMostRecentStories(),

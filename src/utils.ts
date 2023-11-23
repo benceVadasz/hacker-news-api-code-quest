@@ -2,6 +2,10 @@ import { baseStoryUrl } from "./api/axios"
 import { HighlightedStory } from "./types"
 import validUrl from "valid-url"
 
+/* 
+Could have placed it in the API folder
+*/
+
 const CURRENT_TIMESTAMP = (
   Math.floor(Date.now() / (60 * 60 * 1000)) *
   (60 * 60 * 1000)
@@ -50,7 +54,11 @@ export const getRandomStory = async () => {
 }
 
 let cache = {}
-
+/* 
+Could be impoved so:
+get: () => cache[CURRENT_TIMESTAMP]
+will be undefined if there are no stories in the cache
+*/
 export const storyCache = {
   get: () => {
     const cachedStory = cache[CURRENT_TIMESTAMP]
