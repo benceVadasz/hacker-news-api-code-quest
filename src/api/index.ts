@@ -1,42 +1,19 @@
-import { getRandomStory, storyCache } from "../utils"
-import { baseStoryUrl } from "./axios"
+import { getRandomStory, getTopStories, storyCache } from "../utils"
 import cheerio from "cheerio"
 import fetch from "node-fetch"
 
 const LIMIT = 10
 // 5 minutes ⬇️
-export const INTERVAL_MS = 5 * 60 * 10
+export const INTERVAL_MS = 5 * 60 * 1000
+
+/* 
+TODO: getTopStories can be a separate utility function, and getRandomStory could use it 
+    and filter the stories that have urls and then pick one at random
+*/
 
 const getMostRecentStories = async () => {
   try {
-    const { data: topStoryIds } = await baseStoryUrl.get(
-      "/topstories.json?print=pretty"
-    )
-    /*
-    Disadvantage of Promise.all is that if one fails, the array does not return.
-    ALTERNATIVE: allSettled
-    const topStoriesPromises = topStoryIds.map(async (id: number) => {
-    try {
-      const { data: storyResponse } = await baseStoryUrl.get(
-        `/item/${id}.json?print=pretty`
-      );
-      return { status: 'fulfilled', value: storyResponse };
-    } catch (error) {
-      return { status: 'rejected', reason: error };
-    }
-  });
-
-  const results = await Promise.allSettled(topStoriesPromises);
-  const successfulResults = results.filter(result => result.status === 'fulfilled');
-  const topStories = successfulResults.map(result => result.value);
-    */
-    const topStoriesPromises = topStoryIds.map(async (id: number) => {
-      const { data: storyResponse } = await baseStoryUrl.get(
-        `/item/${id}.json?print=pretty`
-      )
-      return storyResponse
-    })
-    const topStories = await Promise.all(topStoriesPromises)
+    const topStories = await getTopStories()
     return topStories.sort((a, b) => b.time - a.time).slice(0, LIMIT)
   } catch (error) {
     throw new Error(`Error fetching most recent top stories: ${error.message}`)
@@ -45,28 +22,23 @@ const getMostRecentStories = async () => {
 
 const getMostPopularStories = async () => {
   try {
-    const { data: topStoryIds } = await baseStoryUrl.get(
-      "/topstories.json?print=pretty"
-    )
-
-    const topStoriesPromises = topStoryIds.map(async (id: number) => {
-      const { data: storyResponse } = await baseStoryUrl.get(
-        `/item/${id}.json?print=pretty`
-      )
-      return storyResponse
-    })
-    const topStories = await Promise.all(topStoriesPromises)
-    const sortedTopStories = topStories.sort((a, b) => b.score - a.score)
-    return sortedTopStories.slice(0, LIMIT)
+    const topStories = await getTopStories()
+    return topStories.sort((a, b) => b.score - a.score).slice(0, LIMIT)
   } catch (error) {
     throw new Error(`Error fetching most popular top stories: ${error.message}`)
   }
 }
 
+const getStory = async (isRefresh: boolean) => {
+  if (process.env.DISABLE_CACHE || isRefresh) {
+    return await getRandomStory()
+  }
+  return (await storyCache.get()) ?? (await getRandomStory())
+}
+
 const getHighlightedStory = async (isRefresh?: boolean) => {
   try {
-    const story =
-      !isRefresh && storyCache.get() ? storyCache.get() : await getRandomStory()
+    const story = await getStory(isRefresh)
 
     if (!storyCache.get()) {
       storyCache.add(story)
